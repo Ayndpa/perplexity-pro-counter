@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Perplexity Pro Counter
 // @namespace    https://www.perplexity.ai/
-// @version      1.0.0
+// @version      1.0.1
 // @description  Show remaining Pro queries on perplexity.ai
 // @match        https://www.perplexity.ai/*
 // @run-at       document-end
@@ -260,10 +260,10 @@
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', endDrag);
       window.removeEventListener('pointercancel', endDrag);
-      
+
       try {
         headerEl.releasePointerCapture(pointerId);
-      } catch (e) {}
+      } catch (e) { }
 
       pointerId = null;
     };
@@ -277,7 +277,7 @@
       pointerId = event.pointerId;
       try {
         headerEl.setPointerCapture(pointerId);
-      } catch (e) {}
+      } catch (e) { }
 
       const rect = widget.getBoundingClientRect();
       startX = event.clientX;
