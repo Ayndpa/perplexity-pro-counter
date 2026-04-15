@@ -91,7 +91,7 @@
   ].join('; ');
 
   widget.innerHTML = `
-    <div id="${HEADER_ID}" style="display:flex;align-items:center;gap:10px;padding:12px 12px 10px 12px;cursor:grab;">
+    <div id="${HEADER_ID}" style="display:flex;align-items:center;gap:10px;padding:12px 12px 10px 12px;cursor:grab;touch-action:none;-webkit-touch-callout:none;">
       <div style="width:24px;height:24px;display:grid;place-items:center;border-radius:8px;background:${theme.chip};color:${theme.muted};flex:0 0 auto;font-size:14px;line-height:1;">⋮⋮</div>
       <div style="display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 auto;">
         <div style="display:flex;align-items:baseline;gap:8px;min-width:0;">
@@ -231,8 +231,8 @@
     let startLeft = 0;
     let startTop = 0;
 
-    const onMouseMove = (event) => {
-      if (!dragging) {
+    const onPointerMove = (event) => {
+      if (!dragging || event.pointerId !== pointerId) {
         return;
       }
 
@@ -242,8 +242,8 @@
       applyPosition(next.left, next.top);
     };
 
-    const endDrag = () => {
-      if (!dragging) {
+    const endDrag = (event) => {
+      if (!dragging || (event && event.pointerId !== pointerId)) {
         return;
       }
 
@@ -257,27 +257,44 @@
         top: nextTop,
       });
 
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', endDrag);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', endDrag);
+      window.removeEventListener('pointercancel', endDrag);
+      
+      try {
+        headerEl.releasePointerCapture(pointerId);
+      } catch (e) {}
+
       pointerId = null;
     };
 
-    headerEl.addEventListener('mousedown', (event) => {
+    headerEl.addEventListener('pointerdown', (event) => {
       if (event.target === refreshEl || event.button !== 0) {
         return;
       }
 
       dragging = true;
-      pointerId = 1;
+      pointerId = event.pointerId;
+      try {
+        headerEl.setPointerCapture(pointerId);
+      } catch (e) {}
+
       const rect = widget.getBoundingClientRect();
       startX = event.clientX;
       startY = event.clientY;
       startLeft = rect.left;
       startTop = rect.top;
       headerEl.style.cursor = 'grabbing';
-      window.addEventListener('mousemove', onMouseMove);
-      window.addEventListener('mouseup', endDrag);
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', endDrag);
+      window.addEventListener('pointercancel', endDrag);
       event.preventDefault();
+    });
+
+    headerEl.addEventListener('contextmenu', (event) => {
+      if (event.target !== refreshEl) {
+        event.preventDefault();
+      }
     });
   }
 
